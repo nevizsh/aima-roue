@@ -3,7 +3,7 @@ import type { ReactNode, Ref } from 'react';
 import { Animated, StyleSheet, View, type ViewInstance } from 'react-native';
 import { NB_LANCERS, nomsObjets, textes } from '../config/content';
 import type { Segment } from '../config/segments';
-import { couleurs, polices, tailles } from '../config/theme';
+import { couleurs, ombres, polices, rayons, tailles } from '../config/theme';
 import type { Question, Recompense, Verdict } from '../domain/types';
 import { useApparition } from '../hooks/useBoucle';
 import { Bouton, Texte } from './base';
@@ -12,7 +12,7 @@ import { IllustrationObjet } from './Objets';
 
 export const LARGEUR_CARTE = 800;
 
-/** Carte avec ombre en aplat ; entrée en glissement + fondu (instantanée en mouvement réduit). */
+/** Carte en surface claire avec ombre douce (style app Aïma) ; entrée en glissement + fondu (instantanée en mouvement réduit). */
 function Carte({
   children,
   cle,
@@ -30,7 +30,6 @@ function Carte({
   const translateY = a.interpolate({ inputRange: [0, 1], outputRange: [36, 0] });
   return (
     <Animated.View style={{ opacity: a, transform: [{ translateY }] }}>
-      <View style={styles.ombre} />
       <View style={styles.carte} ref={refCarte} tabIndex={refCarte ? -1 : undefined} accessibilityLabel={label}>
         {children}
       </View>
@@ -241,7 +240,7 @@ export function CarteReponse({
       </View>
 
       <View style={styles.explication}>
-        <Ionicons name="information-circle" size={40} color={couleurs.aubergine} />
+        <Ionicons name="information-circle" size={40} color={couleurs.petrole} />
         <Texte style={styles.texteExplication}>{question.explication}</Texte>
       </View>
 
@@ -311,24 +310,14 @@ function ObjetColle({ children, index, reduit }: { children: ReactNode; index: n
   );
 }
 
-const RAYON = 44;
-
 const styles = StyleSheet.create({
-  ombre: {
-    position: 'absolute',
-    top: 14,
-    left: 14,
-    right: -14,
-    bottom: -14,
-    borderRadius: RAYON,
-    backgroundColor: couleurs.aubergine,
-  },
   carte: {
+    ...ombres.modale,
     width: LARGEUR_CARTE,
-    backgroundColor: couleurs.creme,
-    borderColor: couleurs.aubergine,
-    borderWidth: 4,
-    borderRadius: RAYON,
+    backgroundColor: couleurs.surface,
+    borderRadius: rayons.lg,
+    // Focus programmatique pour les lecteurs d'écran : la carte n'est pas actionnable, pas d'anneau.
+    outlineColor: 'transparent',
     paddingHorizontal: 44,
     paddingVertical: 30,
     gap: 18,
@@ -336,19 +325,19 @@ const styles = StyleSheet.create({
   },
   titre: { fontFamily: polices.titre, fontSize: 64, lineHeight: 112, textAlign: 'center' },
   sousTitre: { fontFamily: polices.extraGras, fontSize: 40, textAlign: 'center' },
-  aide: { fontFamily: polices.texte, fontSize: 24 },
-  pastille: { borderRadius: 999, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: couleurs.aubergine },
+  aide: { fontFamily: polices.texte, fontSize: 24, color: couleurs.aubergineDouce },
+  pastille: { borderRadius: rayons.plein, alignItems: 'center', justifyContent: 'center' },
   pastilleInterieur: {
-    borderRadius: 999,
-    backgroundColor: couleurs.creme,
+    borderRadius: rayons.plein,
+    backgroundColor: couleurs.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 18 },
-  surtitre: { fontFamily: polices.gras, fontSize: 34 },
+  surtitre: { fontFamily: polices.gras, fontSize: 34, color: couleurs.aubergineDouce },
   themeGrand: { fontFamily: polices.extraGras, fontSize: 56, textAlign: 'center' },
   themePetit: { fontFamily: polices.extraGras, fontSize: 30 },
-  consigne: { fontFamily: polices.texte, fontSize: 26 },
+  consigne: { fontFamily: polices.texte, fontSize: 26, color: couleurs.aubergineDouce },
   question: { fontFamily: polices.extraGras, fontSize: tailles.question, textAlign: 'center', lineHeight: 50 },
   liste: { width: '100%', gap: 12 },
   choix: {
@@ -360,13 +349,13 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 20,
     paddingVertical: 8,
-    borderRadius: 28,
-    borderWidth: 4,
-    borderColor: couleurs.aubergine,
-    backgroundColor: couleurs.creme,
+    borderRadius: rayons.lg,
+    borderWidth: 2,
+    borderColor: couleurs.aubergineDouce,
+    backgroundColor: couleurs.surface,
   },
   choixCompact: { minHeight: 64 },
-  choixCorrect: { backgroundColor: couleurs.petrole },
+  choixCorrect: { backgroundColor: couleurs.petrole, borderColor: couleurs.petrole },
   colonneChoix: { flexShrink: 1 },
   numero: {
     fontFamily: polices.extraGras,
@@ -384,13 +373,13 @@ const styles = StyleSheet.create({
   texteCreme: { color: couleurs.creme },
   etiquette: { fontFamily: polices.extraGras, fontSize: tailles.libelle },
   verdict: { fontFamily: polices.extraGras, fontSize: tailles.verdict },
-  message: { fontFamily: polices.gras, fontSize: 30, textAlign: 'center' },
+  message: { fontFamily: polices.gras, fontSize: 30, textAlign: 'center', color: couleurs.aubergineDouce },
   explication: {
     flexDirection: 'row',
     gap: 14,
     alignItems: 'flex-start',
-    backgroundColor: couleurs.rose,
-    borderRadius: 24,
+    backgroundColor: couleurs.petroleClair,
+    borderRadius: rayons.md,
     padding: 18,
     width: '100%',
   },
@@ -399,7 +388,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 14,
     backgroundColor: couleurs.aubergine,
-    borderRadius: 999,
+    borderRadius: rayons.plein,
     paddingHorizontal: 44,
     paddingVertical: 16,
     minHeight: 72,
@@ -414,9 +403,7 @@ const styles = StyleSheet.create({
     width: 210,
     paddingVertical: 12,
     backgroundColor: couleurs.creme,
-    borderColor: couleurs.aubergine,
-    borderWidth: 4,
-    borderRadius: 28,
+    borderRadius: rayons.lg,
   },
   nomObjet: { fontFamily: polices.extraGras, fontSize: 30 },
 });

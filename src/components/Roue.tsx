@@ -1,22 +1,25 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { memo, type Ref, useEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet, View, type ViewInstance, type ViewStyle } from 'react-native';
-import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
+import Svg, { Circle, G, Path } from 'react-native-svg';
 import { textes } from '../config/content';
 import type { Segment } from '../config/segments';
-import { couleurs, polices, tailles } from '../config/theme';
+import { couleurs, ombres, polices, rayons, tailles } from '../config/theme';
 import { useBoucle } from '../hooks/useBoucle';
 import { centreSegment, largeurSegment } from '../logic/angle';
 import { Bouton, Texte } from './base';
 import { cheminGoutte } from './decor/formes';
 
-/** Rayon extérieur de la jante : la roue occupe un carré de 2 × RAYON_JANTE. */
+/** Rayon de l'emprise de la roue : elle occupe un carré de 2 × RAYON_JANTE (pointeur compris). */
 export const RAYON_JANTE = 390;
 const D = RAYON_JANTE * 2;
 const C = RAYON_JANTE;
 const R_DISQUE = 344;
-const R_AMPOULES = 375;
-const NB_AMPOULES = 20;
+/** Jante : simple anneau aubergine autour du disque. */
+const EPAISSEUR_JANTE = 24;
+const R_EXTERIEUR = R_DISQUE + EPAISSEUR_JANTE;
+const R_AMPOULES = R_DISQUE + EPAISSEUR_JANTE / 2;
+const NB_AMPOULES = 24;
 
 const rad = (deg: number) => (deg * Math.PI) / 180;
 const point = (c: number, r: number, deg: number) => `${c + r * Math.sin(rad(deg))} ${c - r * Math.cos(rad(deg))}`;
@@ -59,7 +62,7 @@ export function Roue({ segments, rotation, oscillationPointeur, modeAmpoules, re
         <Disque segments={segments} />
       </Animated.View>
 
-      {/* Pointeur goutte, pointé vers le haut */}
+      {/* Pointeur goutte en haut de la jante, pointe vers le segment tiré */}
       <Animated.View style={[styles.pointeur, { transform: [{ rotate: inclinaison }] }]} pointerEvents="none" aria-hidden>
         <Pointeur />
       </Animated.View>
@@ -83,15 +86,14 @@ export function Roue({ segments, rotation, oscillationPointeur, modeAmpoules, re
   );
 }
 
-/** Jante double, en aplats laiton (reflet = forme plus claire décalée). */
+/**
+ * Jante sobre : un anneau aubergine en aplat. Il détache la roue du fond crème (12:1),
+ * là où l'ancienne jante orange se fondait dedans (1,9:1).
+ */
 const Jante = memo(function Jante() {
   return (
     <Svg width={D} height={D} style={StyleSheet.absoluteFill} aria-hidden>
-      <Circle cx={C} cy={C + 10} r={RAYON_JANTE - 2} fill={couleurs.aubergine} />
-      <Circle cx={C} cy={C} r={RAYON_JANTE - 2} fill={couleurs.laitonFonce} stroke={couleurs.aubergine} strokeWidth={4} />
-      <Circle cx={C} cy={C} r={RAYON_JANTE - 12} fill={couleurs.orange} />
-      <Circle cx={C - 4} cy={C - 5} r={RAYON_JANTE - 22} fill={couleurs.laitonClair} />
-      <Circle cx={C} cy={C} r={R_DISQUE + 14} fill={couleurs.orange} stroke={couleurs.aubergine} strokeWidth={4} />
+      <Circle cx={C} cy={C} r={R_EXTERIEUR} fill={couleurs.aubergine} />
     </Svg>
   );
 });
@@ -107,6 +109,8 @@ const Disque = memo(function Disque({ segments }: { segments: Segment[] }) {
             key={s.id}
             d={secteur(R_DISQUE, R_DISQUE, i * L, (i + 1) * L)}
             fill={s.couleur}
+            // Séparateurs aubergine : visibles entre deux segments clairs (lime, orange),
+            // que des séparateurs crème laissaient se confondre.
             stroke={couleurs.aubergine}
             strokeWidth={4}
             strokeLinejoin="round"
@@ -124,7 +128,6 @@ const Disque = memo(function Disque({ segments }: { segments: Segment[] }) {
             </G>
           ) : null,
         )}
-        <Circle cx={R_DISQUE} cy={R_DISQUE} r={R_DISQUE - 2} stroke={couleurs.aubergine} strokeWidth={4} fill="none" />
       </Svg>
       {segments.map((s, i) => (
         <Libelle key={s.id} segment={s} index={i} nb={segments.length} />
@@ -133,19 +136,22 @@ const Disque = memo(function Disque({ segments }: { segments: Segment[] }) {
   );
 });
 
+const L_POINTEUR = 56;
+const H_POINTEUR = 84;
+
+/** Goutte aubergine pointe en bas, bordée de crème pour rester lisible sur la jante et les segments. */
 const Pointeur = memo(function Pointeur() {
   return (
-    <Svg width={96} height={150}>
-      <G transform="translate(10 12)">
-        <Path d={cheminGoutte(78, 130)} fill={couleurs.aubergine} />
+    <Svg width={L_POINTEUR + 8} height={H_POINTEUR + 8}>
+      <G transform={`rotate(180 ${(L_POINTEUR + 8) / 2} ${(H_POINTEUR + 8) / 2}) translate(4 4)`}>
+        <Path
+          d={cheminGoutte(L_POINTEUR, H_POINTEUR)}
+          fill={couleurs.aubergine}
+          stroke={couleurs.surface}
+          strokeWidth={4}
+          strokeLinejoin="round"
+        />
       </G>
-      <G transform="translate(9 4)">
-        <Path d={cheminGoutte(78, 130)} fill={couleurs.lime} stroke={couleurs.aubergine} strokeWidth={4} strokeLinejoin="round" />
-      </G>
-      <G transform="translate(22 30)">
-        <Path d={cheminGoutte(52, 92)} fill={couleurs.aubergine} />
-      </G>
-      <Ellipse cx={38} cy={92} rx={5} ry={11} fill={couleurs.creme} transform="rotate(20 38 92)" />
     </Svg>
   );
 });
@@ -176,7 +182,7 @@ function Libelle({ segment: s, index, nb }: { segment: Segment; index: number; n
   );
 }
 
-/** Perles crème qui s'allument à tour de rôle (toutes allumées, fixes, en mouvement réduit). */
+/** Petites perles sur la jante, qui s'allument à tour de rôle (toutes allumées, fixes, en mouvement réduit). */
 function Ampoules({ pas, mode, reduit }: { pas: number; mode: ModeAmpoules; reduit: boolean }) {
   return (
     <>
@@ -184,13 +190,8 @@ function Ampoules({ pas, mode, reduit }: { pas: number; mode: ModeAmpoules; redu
         const angle = (i * 360) / NB_AMPOULES;
         const x = C + R_AMPOULES * Math.sin(rad(angle));
         const y = C - R_AMPOULES * Math.cos(rad(angle));
-        const r = i % 5 === 0 ? 12 : 8;
         const allumee = reduit || (mode === 'fete' ? (i + pas) % 2 === 0 : (i + pas) % 4 < 2);
-        return (
-          <G key={i}>
-            <Circle cx={x} cy={y} r={r} fill={allumee ? couleurs.creme : couleurs.ampouleEteinte} stroke={couleurs.aubergine} strokeWidth={3} />
-          </G>
-        );
+        return <Circle key={i} cx={x} cy={y} r={5} fill={allumee ? couleurs.lime : couleurs.aubergineDouce} />;
       })}
     </>
   );
@@ -232,30 +233,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: couleurs.creme,
-    borderColor: couleurs.aubergine,
-    borderWidth: 3,
-    borderRadius: 18,
+    backgroundColor: couleurs.surface,
+    borderRadius: rayons.md,
     paddingHorizontal: 12,
     paddingVertical: 4,
   },
   libelle: { fontFamily: polices.extraGras, fontSize: tailles.libelle, lineHeight: 28 },
   pointeur: {
     position: 'absolute',
-    left: C - 48,
-    top: C - 214,
-    width: 96,
-    height: 150,
-    transformOrigin: '50% 100%',
+    left: C - (L_POINTEUR + 8) / 2,
+    // Le corps de la goutte chevauche le haut de la jante, la pointe mord sur le disque.
+    top: C - R_EXTERIEUR - 20,
+    width: L_POINTEUR + 8,
+    height: H_POINTEUR + 8,
+    // Oscille autour de son attache, en haut.
+    transformOrigin: '50% 0%',
   },
   centre: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
   anneauCreme: {
     width: TAILLE_BOUTON + 24,
     height: TAILLE_BOUTON + 24,
-    borderRadius: 999,
-    backgroundColor: couleurs.creme,
-    borderColor: couleurs.aubergine,
-    borderWidth: 4,
+    ...ombres.flottante,
+    borderRadius: rayons.plein,
+    backgroundColor: couleurs.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
