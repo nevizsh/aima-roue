@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, View } from 'react-native';
 import Svg, { G, Path } from 'react-native-svg';
 import { NB_LANCERS, textes } from '../config/content';
-import { couleurs, polices } from '../config/theme';
+import { couleurs, ombres, polices, rayons } from '../config/theme';
 import type { Verdict } from '../domain/types';
 import { Texte } from './base';
 import { cheminGoutte } from './decor/formes';
@@ -11,13 +11,13 @@ type EtatGoutte = Verdict | 'aVenir' | 'enCours';
 
 /**
  * Goutte d'un lancer (jamais la couleur seule) :
- * à venir = contour pointillé + numéro ; bonne = pleine + coche ; presque = claire + ampoule.
+ * à venir = contour pointillé discret + numéro ; bonne = pleine + coche ; presque = claire + ampoule.
  */
 export function GoutteLancer({ numero, etat, taille = 64 }: { numero: number; etat: EtatGoutte; taille?: number }) {
   const l = taille * 0.78;
   const h = taille;
   const aVenir = etat === 'aVenir' || etat === 'enCours';
-  const fond = etat === 'bonne' ? couleurs.petrole : etat === 'presque' ? couleurs.rose : etat === 'enCours' ? couleurs.lime : couleurs.creme;
+  const fond = etat === 'bonne' ? couleurs.petrole : etat === 'presque' ? couleurs.rose : etat === 'enCours' ? couleurs.lime : couleurs.surface;
   const label =
     etat === 'bonne' ? textes.goutteBonne(numero) : etat === 'presque' ? textes.gouttePresque(numero) : textes.goutteAVenir(numero);
   return (
@@ -27,9 +27,9 @@ export function GoutteLancer({ numero, etat, taille = 64 }: { numero: number; et
           <Path
             d={cheminGoutte(l, h)}
             fill={fond}
-            stroke={couleurs.aubergine}
-            strokeWidth={4}
-            strokeDasharray={aVenir ? '7 6' : undefined}
+            stroke={etat === 'aVenir' ? couleurs.aubergineDouce : couleurs.aubergine}
+            strokeWidth={3}
+            strokeDasharray={aVenir ? '6 5' : undefined}
             strokeLinejoin="round"
           />
         </G>
@@ -76,13 +76,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 24,
-    backgroundColor: couleurs.creme,
-    borderColor: couleurs.aubergine,
-    borderWidth: 4,
-    borderRadius: 999,
+    ...ombres.flottante,
+    backgroundColor: couleurs.surface,
+    borderRadius: rayons.plein,
     paddingLeft: 32,
     paddingRight: 24,
-    paddingVertical: 6,
+    paddingVertical: 10,
   },
   texte: { fontFamily: polices.extraGras, fontSize: 34 },
   gouttes: { flexDirection: 'row', gap: 12, alignItems: 'center' },

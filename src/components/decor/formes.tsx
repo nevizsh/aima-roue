@@ -25,21 +25,6 @@ function cheminGouttePointeEnBas(l: number, h: number): string {
   ].join(' ');
 }
 
-/** Étincelle à quatre branches centrée en (0, 0). */
-export const cheminEtincelle = (R: number) =>
-  `M 0 ${-R} Q 0 0 ${R} 0 Q 0 0 0 ${R} Q 0 0 ${-R} 0 Q 0 0 0 ${-R} Z`;
-
-export function Etincelle({ taille, couleur }: { taille: number; couleur: string }) {
-  const R = taille / 2;
-  return (
-    <Svg width={taille} height={taille} aria-hidden>
-      <G transform={`translate(${R} ${R})`}>
-        <Path d={cheminEtincelle(R)} fill={couleur} />
-      </G>
-    </Svg>
-  );
-}
-
 /** Petit cœur formé de deux gouttes (remplace les gemmes de la référence). */
 export function CoeurGouttes({ taille, couleur }: { taille: number; couleur: string }) {
   const goutte = cheminGouttePointeEnBas(46, 66);

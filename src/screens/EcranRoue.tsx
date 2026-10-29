@@ -14,14 +14,13 @@ import {
 } from '../components/Cartes';
 import { Compteur } from '../components/Compteur';
 import { Confettis } from '../components/decor/Confettis';
-import { CENTRE_ROUE, Coeurs, Etincelles, Fond } from '../components/decor/Fond';
+import { CENTRE_ROUE, Fond, Pastilles } from '../components/decor/Fond';
 import { Echelle } from '../components/Echelle';
-import { type Expression, Mascotte } from '../components/Mascotte';
 import { type ModeAmpoules, RAYON_JANTE, Roue } from '../components/Roue';
 import { LARGEUR_SOCLE, Socle } from '../components/Socle';
 import { NB_LANCERS, nomsObjets, textes } from '../config/content';
 import { estJoker, type Segment } from '../config/segments';
-import { couleurs, durees, polices } from '../config/theme';
+import { couleurs, durees, ombres, polices, rayons } from '../config/theme';
 import type { QuestionsAdapter } from '../data/QuestionsAdapter';
 import type { ObjetEpuisable, Rng, ThemeId } from '../domain/types';
 import { useClavier } from '../hooks/useClavier';
@@ -35,8 +34,6 @@ import { lireEpuises, palierPour, recompense } from '../logic/recompense';
 import { type Etat, etatInitial, nbBonnes, peutLancer, reducteur } from '../logic/reducteur';
 import { tirerSegment } from '../logic/tirage';
 import { chargerHistorique, chargerSon, sauverHistorique, sauverSon } from '../storage/stockageLocal';
-
-const TAILLE_MASCOTTE = 170;
 
 interface Props {
   adapter: QuestionsAdapter;
@@ -78,13 +75,6 @@ function messageAnnonce(etat: Etat, segments: Segment[], epuises: readonly Objet
     default:
       return '';
   }
-}
-
-function expressionMascotte(etat: Etat): Expression {
-  if (etat.phase === 'rotation' || etat.phase === 'theme') return 'excitee';
-  if (etat.phase === 'resultat') return 'ravie';
-  if (etat.phase === 'reponse') return etat.verdict === 'bonne' ? 'ravie' : 'attente';
-  return 'attente';
 }
 
 function modeAmpoules(etat: Etat): ModeAmpoules {
@@ -317,8 +307,7 @@ export function EcranRoue({ adapter, rng = rngCrypto }: Props) {
 
   return (
     <Scene>
-      <Fond reduit={reduit} />
-      <Coeurs reduit={reduit} />
+      <Fond />
 
       <View style={styles.socle} pointerEvents="none">
         <Socle />
@@ -338,12 +327,7 @@ export function EcranRoue({ adapter, rng = rngCrypto }: Props) {
         )}
       </View>
 
-      {/* Mascotte perchée sur la jante, au-dessus de la roue */}
-      <View style={styles.mascotte} pointerEvents="none">
-        <Mascotte expression={expressionMascotte(etat)} taille={TAILLE_MASCOTTE} reduit={reduit} />
-      </View>
-
-      <Etincelles reduit={reduit} />
+      <Pastilles reduit={reduit} />
 
       <View style={styles.colonne}>
         <View style={styles.haut}>
@@ -401,7 +385,7 @@ export function EcranRoue({ adapter, rng = rngCrypto }: Props) {
 
       {/* Bouton son, en haut à droite */}
       <Bouton onPress={basculerSon} accessibilityLabel={son ? textes.sonActive : textes.sonCoupe} style={styles.son}>
-        <Ionicons name={son ? 'volume-high' : 'volume-mute'} size={28} color={couleurs.creme} />
+        <Ionicons name={son ? 'volume-high' : 'volume-mute'} size={28} color={couleurs.aubergine} />
         <Texte style={styles.texteSon}>{son ? textes.sonActive : textes.sonCoupe}</Texte>
       </Bouton>
 
@@ -415,13 +399,8 @@ const styles = StyleSheet.create({
   socle: {
     position: 'absolute',
     left: CENTRE_ROUE.x - LARGEUR_SOCLE / 2,
-    top: CENTRE_ROUE.y + RAYON_JANTE - 60,
-  },
-  mascotte: {
-    position: 'absolute',
-    left: CENTRE_ROUE.x - TAILLE_MASCOTTE / 2,
-    // Le bas de la goutte repose sur la jante.
-    top: CENTRE_ROUE.y - RAYON_JANTE + 34 - TAILLE_MASCOTTE * 1.1,
+    // Plaque posée juste sous la jante.
+    top: CENTRE_ROUE.y + RAYON_JANTE + 8,
   },
   roue: {
     position: 'absolute',
@@ -445,10 +424,11 @@ const styles = StyleSheet.create({
     top: 24,
     flexDirection: 'row',
     gap: 10,
-    backgroundColor: couleurs.aubergine,
-    borderRadius: 999,
+    ...ombres.flottante,
+    backgroundColor: couleurs.surface,
+    borderRadius: rayons.plein,
     paddingHorizontal: 22,
     paddingVertical: 10,
   },
-  texteSon: { fontFamily: polices.extraGras, fontSize: 24, color: couleurs.creme },
+  texteSon: { fontFamily: polices.extraGras, fontSize: 24 },
 });
